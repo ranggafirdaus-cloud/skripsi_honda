@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Hasil Analisis | Wahana Honda Ciputat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        .header-card { background: #e60012; color: white; border-radius: 15px 15px 0 0; }
+        .custom-card { border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .table thead { background-color: #343a40; color: white; }
+        .badge-cluster-link { transition: transform 0.2s; display: inline-block; text-decoration: none; }
+        .badge-cluster-link:hover { transform: scale(1.1); }
+        .badge-cluster-0 { background-color: #0d6efd; } /* Biru */
+        .badge-cluster-1 { background-color: #198754; } /* Hijau */
+        .badge-cluster-2 { background-color: #fd7e14; } /* Oranye */
+        
+        /* Tambahan style untuk progress bar tumpuk */
+        .progress-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 4px; }
+    </style>
+</head>
+<body class="p-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-0">Hasil Analisis K-Means Clustering</h2>
+                <p class="text-muted">Metode Segmentasi Berdasarkan Jenis Bayar dan Harga Motor</p>
+            </div>
+            <a href="/" class="btn btn-outline-danger shadow-sm">Kembali ke Dashboard</a>
+        </div>
+        
+        <div class="card custom-card mb-4">
+            <div class="card-header header-card p-3">
+                <h5 class="mb-0">Karakteristik Tiap Klaster (K = {{ k }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for row in analisis %}
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 border rounded shadow-sm bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold text-danger mb-0">Klaster {{ row.cluster }}</h6>
+                                <span class="badge bg-light text-dark border">
+                                    {% if row.persentase_cash > 0.5 %}
+                                        Dominan Cash
+                                    {% else %}
+                                        Dominan Kredit
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <hr>
+                            <p class="mb-1">Kecenderungan Metode Bayar:</p>
+                            
+                            <div class="progress mb-1" style="height: 12px;">
+                                <div class="progress-bar bg-danger" role="progressbar" 
+                                     style="width: {{ (row.persentase_cash * 100)|round }}%" 
+                                     title="Cash"></div>
+                                <div class="progress-bar bg-secondary opacity-50" role="progressbar" 
+                                     style="width: {{ (100 - (row.persentase_cash * 100))|round }}%" 
+                                     title="Kredit"></div>
+                            </div>
+                            
+                            <div class="progress-label">
+                                <span class="text-danger fw-bold">Cash: {{ (row.persentase_cash * 100)|round(1) }}%</span>
+                                <span class="text-muted">Kredit: {{ (100 - (row.persentase_cash * 100))|round(1) }}%</span>
+                            </div>
+
+                            <p class="mt-3 mb-0 text-muted small">Rata-rata Harga Motor:</p>
+                            <h5 class="text-dark fw-bold">Rp {{ "{:,.0f}".format(row.rata_rata_harga) }}</h5>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card custom-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="ps-4">No Faktur</th>
+                                <th>Nama Konsumen</th>
+                                <th>Jenis Beli</th>
+                                <th>Harga Motor (Est.)</th>
+                                <th class="text-center">Label Klaster (Klik untuk Detail)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                            <tr>
+                                <td class="ps-4">{{ row.no_faktur }}</td>
+                                <td class="fw-bold">{{ row.nama_konsumen }}</td>
+                                <td>
+                                    <span class="badge {{ 'bg-info text-dark' if row.jenis_beli == 'Cash' else 'bg-secondary' }}">
+                                        {{ row.jenis_beli }}
+                                    </span>
+                                </td>
+                                <td>Rp {{ "{:,.0f}".format(row.harga_estimasi) }}</td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('detail_cluster', cluster_id=row.cluster_label) }}" target="_blank" class="badge-cluster-link">
+                                        <span class="badge rounded-pill badge-cluster-{{ row.cluster_label }} p-2 px-3">
+                                            Klaster {{ row.cluster_label }}
+                                        </span>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
